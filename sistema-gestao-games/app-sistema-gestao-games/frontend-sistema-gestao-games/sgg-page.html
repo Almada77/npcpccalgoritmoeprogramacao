@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Sistema de Gestão de Games</title>
+    
+    <!-- Inclua o React e o ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@17.0.2/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+
+    <style>
+         
+        /* Estilos para melhorar a usabilidade e o design */
+        
+        body {
+            font-family: Arial, sans-serif;
+
+            background-image: url('ceu.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+        }
+       
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 50%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 16px;
+        }
+
+        .input-medium {
+            width: 50%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: gray;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .edit-buttons {
+            margin-top: 10px;
+        }
+		
+		/* Estilo para os botões */
+		.btn-remover {
+			background-color: #ff0000; /* Cor vermelha */
+		}
+		.btn-cadastrar {
+			background-color: #ff0000; /* Cor vermelha */
+		}		
+		.btn-salvar {
+			background-color: green; /* Cor vermelha */
+		}			
+		.btn-editar {
+			background-color: #ff0000; /* Cor vermelha */
+		}		
+		.btn-remover {
+			background-color: #ff0000; /* Cor vermelha */
+		}		
+		.btn-cancelar {
+			background-color: orange; /* Cor vermelha */
+		}
+	
+    /* ... FIM - Estilos ... */
+    </style>
+</head>
+
+
+<style>
+            #dov{
+        display: flex;
+        justify-content: center;
+    }
+</style>
+<body><div id="dov">
+         <img src="banner.png" alt="Sistema de Gestão de Games" width="53%">
+        </div></body>
+
+    <div id="root"></div>
+ 
+
+</body>
+
+<script type="text/babel">
+
+    class GamePageComponent extends React.Component {
+        constructor() {
+            super();
+            this.state = {
+                games: [],
+                novoGame: {
+                    valor1: '',
+                    valor2: '',
+                    valor3: '',
+                    valor4: '',
+                    valor5: '',
+                    valor6: '' // Novo campo para data e hora
+                },
+                gameEmEdicao: null
+            };
+        }
+
+        componentDidMount() {
+            this.fetchGames();
+        }
+
+        async fetchGames() {
+            try {
+                const response = await fetch('http://localhost:8080/v1/games');
+                if (response.ok) {
+                    const data = await response.json();
+                    this.setState({ games: data });
+                    } else {
+                    console.error('Erro ao buscar os games.');
+                }
+            } catch (error) {
+                console.error('Erro ao buscar os games:', error);
+            }
+        }
+
+        async cadastrarGame() {
+            try {
+                // Formate o valor6 para o formato desejado
+                const formattedValue6 = this.formatarDataHora(this.state.novoGame.valor6);
+                const response = await fetch('http://localhost:8080/v1/games', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...this.state.novoGame,
+                        valor6: formattedValue6
+                    }),
+                });
+                if (response.ok) {
+                    this.fetchGames();
+                    this.setState({
+                        novoGame: {
+                            valor1: '',
+                            valor2: '',
+                            valor3: '',
+                            valor4: '',
+                            valor5: '',
+                            valor6: ''
+                        }
+                    });
+                    alert("Cadastrado com Sucesso!!!");
+                } else {
+                    console.error('Erro ao cadastrar o game.');
+                }
+            } catch (error) {
+                console.error('Erro ao cadastrar o game:', error);
+            }
+        }
+
+        async removerGame(id) {
+            try {
+                const response = await fetch(`http://localhost:8080/v1/games/${id}`, {
+                    method: 'DELETE',
+                });
+                if (response.ok) {
+                    this.fetchGames();
+                    alert("Removido com Sucesso!!!");
+                } else {
+                    console.error('Erro ao remover o game.');
+                }
+            } catch (error) {
+                console.error('Erro ao remover o game:', error);
+            }
+        }
+
+        async editarGame() {
+            try {
+                // Formate o valor6 para o formato desejado
+                const formattedValue6 = this.formatarDataHora(this.state.gameEmEdicao.valor6);
+                const response = await fetch(`http://localhost:8080/v1/games/${this.state.gameEmEdicao.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...this.state.gameEmEdicao,
+                        valor3: formattedValue6
+                    }),
+                });
+                if (response.ok) {
+                    this.fetchGames();
+                    this.setState({ gameEmEdicao: null });
+                    alert("Atualizado com Sucesso!!!");
+                } else {
+                    console.error('Erro ao editar o game.');
+                }
+            } catch (error) {
+                console.error('Erro ao editar o game:', error);
+            }
+        }
+
+        // Função para formatar data e hora no formato "2023-01-20T20:38:12"
+        formatarDataHora(dataHora) {
+            const data = new Date(dataHora);
+            const ano = data.getFullYear();
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const dia = String(data.getDate()).padStart(2, '0');
+            const hora = String(data.getHours()).padStart(2, '0');
+            const minuto = String(data.getMinutes()).padStart(2, '0');
+            const segundo = String(data.getSeconds()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}T${hora}:${minuto}:${segundo}`;
+        }
+          // Função para formatar data e hora no formato "dd/mm/yyyy hh:mm:ss"
+        formatarDataHoraPadraoBR(dataHora) {
+            const data = new Date(dataHora);
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+            const hora = String(data.getHours()).padStart(2, '0');
+            const minuto = String(data.getMinutes()).padStart(2, '0');
+            const segundo = String(data.getSeconds()).padStart(2, '0');
+            return `${dia}/${mes}/${ano} ${hora}:${minuto}:${segundo}`;
+        }
+
+        render() {
+            return (
+                <div className="container">
+                    <h1>Cadastro de Games</h1>
+                    <form>
+                        <label>
+                           Título do Jogo:
+                            <input
+                                type="text"
+                                value={this.state.novoGame.valor1}
+                                onChange={(e) => this.setState({ novoGame: { ...this.state.novoGame, valor1: e.target.value } })}
+                            />
+                        </label>
+                        <br/>
+                        <label>
+                            Plataforma do Jogo:
+                            <input
+                                type="text"
+                                value={this.state.novoGame.valor2}
+                                onChange={(e) => this.setState({ novoGame: { ...this.state.novoGame, valor2: e.target.value } })}
+                            />
+                        </label>
+                        <br />
+                        <label>
+                            Desenvolvedor do Jogo:
+                            <input
+                                type="text"
+                                value={this.state.novoGame.valor3}
+                                onChange={(e) => this.setState({ novoGame: { ...this.state.novoGame, valor3: e.target.value } })}
+                            />
+                        </label>
+                        <br />
+                        <label>
+                            Classificação Etária:
+                            <input
+                                type="text"
+                                value={this.state.novoGame.valor4}
+                                onChange={(e) => this.setState({ novoGame: { ...this.state.novoGame, valor4: e.target.value } })}
+                            />
+                        </label>
+                        <br />
+                        <label>
+                            Preço:
+                            <input
+                                type="text"
+                                value={this.state.novoGame.valor5}
+                                onChange={(e) => this.setState({ novoGame: { ...this.state.novoGame, valor5: e.target.value } })}
+                            />
+                        </label>
+                        <br />
+                        <label>
+                            Disponibilidade do Jogo:
+                            <input
+                                type="datetime-local"  className="input-medium"
+                                value={this.state.novoGame.valor6}
+                                onChange={(e) => this.setState({ novoGame: { ...this.state.novoGame, valor6: e.target.value } })}
+                            />
+                            (Data e Hora)
+                        </label>
+                        <br />
+                        <button type="button" onClick={() => this.cadastrarGame()}>Cadastrar</button>
+                    </form>
+                    <ul>
+                        {this.state.games.map((game, index) => (
+                            <li key={index}>
+                                <strong>Valor1:</strong> {game.valor1}<br />
+                                <strong>Valor2:</strong> {game.valor2}<br />
+                                <strong>Valor3:</strong> {game.valor3}<br />
+                                <strong>Valor4:</strong> {game.valor4}<br />
+                                <strong>Valor5:</strong> {game.valor5}<br />
+                                <strong>Valor6 (Data e Hora):</strong> {this.formatarDataHoraPadraoBR(game.valor6)}<br />
+                                <div className="edit-buttons">
+                                    <button onClick={() => this.setState({ gameEmEdicao: game })}>Editar</button>
+                                    <span>&nbsp;</span>
+                                    <button className="btn-remover" onClick={() => this.removerGame(game.id)}>Remover</button>
+                                </div>
+                                {this.state.gameEmEdicao && this.state.gameEmEdicao.id === game.id && (
+                                    <form>
+                                        <label>
+                                            Novo Valor1:
+                                            <input
+                                                type="text"
+                                                value={this.state.gameEmEdicao.valor1}
+                                                onChange={(e) => this.setState({ gameEmEdicao: { ...this.state.gameEmEdicao, valor1: e.target.value } })}
+                                            />
+                                        </label>
+                                        <br />
+                                        <label>
+                                            Novo Valor2:
+                                            <input
+                                                type="text"
+                                                value={this.state.gameEmEdicao.valor2}
+                                                onChange={(e) => this.setState({ gameEmEdicao: { ...this.state.gameEmEdicao, valor2: e.target.value } })}
+                                            />
+                                        </label>
+                                        <br />
+                                        <label>
+                                            Novo Valor3:
+                                            <input
+                                                type="text"
+                                                value={this.state.gameEmEdicao.valor3}
+                                                onChange={(e) => this.setState({ gameEmEdicao: { ...this.state.gameEmEdicao, valor3: e.target.value } })}
+                                            />
+                                        </label>
+                                        <br />
+                                        <label>
+                                            Novo Valor4:
+                                            <input
+                                                type="text"
+                                                value={this.state.gameEmEdicao.valor4}
+                                                onChange={(e) => this.setState({ gameEmEdicao: { ...this.state.gameEmEdicao, valor4: e.target.value } })}
+                                            />
+                                        </label>
+                                        <br />
+                                        <label>
+                                            Novo Valor5:
+                                            <input
+                                                type="text"
+                                                value={this.state.gameEmEdicao.valor5}
+                                                onChange={(e) => this.setState({ gameEmEdicao: { ...this.state.gameEmEdicao, valor5: e.target.value } })}
+                                            />
+                                        </label>
+                                        <br />
+                                        <label>
+                                            Novo Valor6 (Data e Hora):
+                                            <input
+                                                type="datetime-local"
+                                                value={this.state.gameEmEdicao.valor6}
+                                                onChange={(e) => this.setState({ gameEmEdicao: { ...this.state.gameEmEdicao, valor6: e.target.value } })}
+                                            />
+                                        </label>
+                                        <br />
+                                        <div className="edit-buttons">
+                                            <button className="btn-salvar" type="button" onClick={() => this.editarGame()}>Salvar</button>
+                                            <span>&nbsp;</span>
+                                            <button className="btn-cancelar" type="button" onClick={() => this.setState({ gameEmEdicao: null })}>Cancelar</button>
+                                        </div>
+                                    </form>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            );
+        }
+    }
+
+    ReactDOM.render(<GamePageComponent />, document.getElementById('root'));
+
+</script>
+</html>

@@ -1,0 +1,157 @@
+package br.uece.sgg.v1.persistencia;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.sql.DataSource;
+
+import org.springframework.stereotype.Component;
+
+import br.uece.sgg.v1.negocio.Game;
+
+@Component
+public class RepositorioGameJdbc implements RepositorioGame {
+
+	private final Connection conexao;
+
+	public RepositorioGameJdbc(DataSource dataSource) {
+		try {
+
+			this.conexao = dataSource.getConnection();
+
+		} catch (SQLException e) {
+			throw new PersistenciaException(e);
+		}
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(LocalDateTime.now());
+	}
+	
+	private Game mapearResultadoParaGame(ResultSet resultado) throws SQLException {
+		Long id = resultado.getLong("id");
+		String valor1 = resultado.getString("valor1");
+		String valor2 = resultado.getString("valor2");
+		String valor3 = resultado.getString("valor3");
+		String valor4 = resultado.getString("valor4");
+		String valor5 = resultado.getString("valor5");
+		String valor6 = resultado.getString("valor6");
+		return new Game(id, valor1, valor2, valor3, valor4, valor5, valor6);
+	}
+
+	@Override
+	public Game salvarGame(Game game) {
+		String sql = "INSERT INTO game (valor1, valor2, valor3, valor4, valor5, valor6) VALUES (?, ?, ?, ?, ?, ?)";
+		try (PreparedStatement stmt = conexao.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+			stmt.setString(1, game.getValor1());
+			stmt.setString(2, game.getValor2());
+			stmt.setString(3, game.getValor3());
+			stmt.setString(4, game.getValor4());
+			stmt.setString(5, game.getValor5());
+			stmt.setString(6, game.getValor6()== null ? null : game.getValor6().toString());
+			
+
+			int affectedRows = stmt.executeUpdate();
+
+			if (affectedRows == 0) {
+				throw new PersistenciaException("A inserção falhou, nenhum registro foi adicionado.");
+			}
+
+			// Recupere o ID gerado para o registro inserido
+			try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+				if (generatedKeys.next()) {
+					game.setId(generatedKeys.getLong(1));
+					System.out.printf("[LOG] ID do registro 'inserido': %d!\n", game.getId());
+				} else {
+					throw new PersistenciaException("Nenhum ID gerado.");
+				}
+			}
+		} catch (SQLException e) {
+			throw new PersistenciaException("Erro ao salvar game.", e);
+		}
+		return game;
+	}
+
+	@Override
+	public Game buscarGamePorId(Long id) {
+		String sql = "SELECT * FROM game WHERE id = ?";
+		try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+			stmt.setLong(1, id);
+			try (ResultSet resultado = stmt.executeQuery()) {
+				if (resultado.next()) {
+					return mapearResultadoParaGame(resultado);
+				}
+			}
+		} catch (SQLException e) {
+			throw new PersistenciaException("Erro ao buscar game por ID.", e);
+		}
+		return null;
+	}
+
+	@Override
+	public List<Game> listarGames() {
+		
+		List<Game> games = new ArrayList<>();
+		String sql = "SELECT * FROM game ORDER BY id DESC";
+		
+		try (
+				PreparedStatement stmt = conexao.prepareStatement(sql); 
+				ResultSet resultado = stmt.executeQuery()
+		) {
+			
+			while (resultado.next()) {
+				games.add(mapearResultadoParaGame(resultado));
+			}
+			
+		} catch (SQLException e) {
+			throw new PersistenciaException("Erro ao listar games.", e);
+		}
+		return games;
+	}
+
+	@Override
+	public void atualizarGame(Game game) {
+		String sql = "UPDATE game SET valor1 = ?, valor2 = ?, valor3 = ?, valor4 = ?, valor5 = ?, valor6 = ? WHERE id = ?";
+		try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+			stmt.setString(1, game.getValor1());
+			stmt.setString(2, game.getValor2());
+			stmt.setString(3, game.getValor3());
+			stmt.setString(4, game.getValor4());
+			stmt.setString(5, game.getValor5()== null ? null : game.getValor5().toString());
+			stmt.setString(6, game.getValor6());
+			stmt.setLong(7, game.getId());
+			int affectedRows = stmt.executeUpdate();
+
+			if (affectedRows == 0) {
+				throw new PersistenciaException("A atualização falhou, nenhum registro foi atualizado.");
+			}
+
+			System.out.printf("[LOG] ID do registro 'atualizado': %d!\n", game.getId());
+		} catch (SQLException e) {
+			throw new PersistenciaException("Erro ao atualizar game.", e);
+		}
+	}
+
+	@Override
+	public void excluirGame(Game game) {
+		String sql = "DELETE FROM game WHERE id = ?";
+		try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+			stmt.setLong(7, game.getId());
+			int affectedRows = stmt.executeUpdate();
+
+			if (affectedRows == 0) {
+				throw new PersistenciaException("A exclusão falhou, nenhum registro foi removido.");
+			}
+
+			System.out.printf("[LOG] ID do registro 'removido': %d!\n", game.getId());
+		} catch (SQLException e) {
+			throw new PersistenciaException("Erro ao excluir game.", e);
+		}
+	}
+	
+}

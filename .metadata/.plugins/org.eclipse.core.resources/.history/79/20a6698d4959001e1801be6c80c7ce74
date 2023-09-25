@@ -1,0 +1,50 @@
+package br.uece.xpto.v1.negocio;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import br.uece.xpto.v1.persistencia.RepositorioXpto;
+
+@Service
+public class ServicoGame {
+
+	private RepositorioXpto repositorioXpto;
+
+	public ServicoGame(RepositorioXpto repositorioXpto) {
+		this.repositorioXpto = repositorioXpto;
+	}
+
+	public List<Game> listarGames() {
+		List<Game> xptos = repositorioXpto.listarGames();
+		if (xptos.isEmpty()) {
+			throw new NegocioException("Nenhuma xpto encontrada.");
+		}
+		return xptos;
+	}
+
+	public Game criarXpto(Game novaXpto) {
+		return repositorioXpto.salvarGame(novaXpto);
+	}
+
+	public Game atualizarXpto(Game xpto) {
+		repositorioXpto.atualizarGame(xpto);
+		return buscarXptoPorId(xpto.getId());
+	}
+		
+	public void removerXpto(Game xpto) {
+		Game xptoExistente = this.buscarXptoPorId(xpto.getId());
+		repositorioXpto.excluirGame(xptoExistente);
+	}
+	
+	public Game buscarXptoPorId(Long id) {
+		Game xptoExistente = repositorioXpto.buscarXptoPorId(id);
+		
+		if (xptoExistente == null) {
+			throw new NegocioException("Xpto não encontrada.");
+		}
+		
+		return xptoExistente;
+	}
+
+}

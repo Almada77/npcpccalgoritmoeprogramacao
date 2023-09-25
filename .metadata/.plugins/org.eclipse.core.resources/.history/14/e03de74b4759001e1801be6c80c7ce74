@@ -1,0 +1,39 @@
+package br.uece.xpto.v1.apresentacao.dto;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import br.uece.xpto.v1.negocio.Game;
+
+public class GameDtoMapper {
+
+    public static GameDto toDto(Game xpto) {
+        GameDto dto = new GameDto();
+        dto.setId(xpto.getId());
+        dto.setValor1(xpto.getValor1());
+        dto.setValor2(xpto.getValor2());
+        dto.setValor3(xpto.getValor3());
+        return dto;
+    }
+    
+    public static Game fromDto(GameDto dto) {
+        Game xpto = new Game();
+        xpto.setId(dto.getId());
+        xpto.setValor1(dto.getValor1());
+        xpto.setValor2(dto.getValor2());
+        xpto.setValor3(dto.getValor3());
+        return xpto;
+    }
+
+    public static List<GameDto> toDtoList(List<Game> xptos) {
+        return xptos.stream()
+                .map(GameDtoMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    public static List<Game> fromDtoList(List<GameDto> dtos) {
+        return dtos.stream()
+                .map(GameDtoMapper::fromDto)
+                .collect(Collectors.toList());
+    }
+}
